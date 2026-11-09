@@ -1,0 +1,103 @@
+// torogao-timestop-dynamics/1 — measured tables for the Time Stop
+// remake systems core, transcribed from the clean-room RE record
+// (~/workspace/nsfw-remakes-20261108/games/time-stop-dynamics.md;
+// evidence: primo ~/.local/share/pax/time-stop-20261108/ — ikdasm IL
+// export of Assembly-CSharp.dll, sha256 c8111878227ee4864186f1f7c4ed03
+// e29f0e90c14307f01d248b371d8df28941, byte-identical across two
+// independent ikdasm runs).
+//
+// Every value below is a measurement from the TimeStop1 build
+// (Unity 2022.1.23f1 Mono), cited to its spec section. Serialized
+// tuning values the spec registers as UNKNOWN/REVIEW (§10: walk/run
+// speeds, dwell timers, queue wait time, sensitivities, volume
+// targets) are ABSENT here rather than invented — the loader and
+// the systems paths never consult them. Identifiers are the
+// measured enum vocabularies from the IL; all shipped text in the
+// remake is estate-original placeholder data authored at the
+// Owner-gated content pass (S5) — none of the original's text,
+// assets, or code is carried.
+(
+    // Girl state vocabulary (spec §4, MEASURED from
+    // GirlStateMachine.Init()). SawNaked is declared in the
+    // original's vocabulary and has NO transition in the measured
+    // table (spec §4 named gap, §10.8) — it is carried here so the
+    // graph is the graph as measured, and the crate's tests prove
+    // it unreachable rather than silently repairing it.
+    girl_states: [None, Normal, NoClothes, RunningAway, WrongState, SawNaked],
+    // Girl input vocabulary (spec §4, MEASURED).
+    girl_inputs: [None, NoClothes, RunAway, SawNaked, _wrongGirlState, Calmed],
+    // Initial girl state (spec §4, MEASURED).
+    girl_initial: Normal,
+    // The full measured girl transition table (spec §4, 6 rows,
+    // built in code in the original — not serialized).
+    girl_transitions: [
+        (from: Normal, input: NoClothes, to: NoClothes),
+        (from: NoClothes, input: RunAway, to: RunningAway),
+        (from: RunningAway, input: Calmed, to: Normal),
+        (from: NoClothes, input: Calmed, to: Normal),
+        (from: Normal, input: _wrongGirlState, to: WrongState),
+        (from: WrongState, input: Calmed, to: Normal),
+    ],
+    // Nav state vocabulary (spec §5, MEASURED from
+    // NavStateMachine.Init()).
+    nav_states: [None, Random, LocationEntering, LocationTraversing, LocationExiting, ShopLooking, InQueue],
+    // Nav input vocabulary (spec §5, MEASURED).
+    nav_inputs: [None, ToRandom, ToLocation, ToLocationTraverse, ToLocationExit, LookShop, QueueUp],
+    // Initial nav state for a walking girl (spec §5, MEASURED;
+    // the GoesToShop serialized branch's arm assignment is
+    // DERIVED in spec §10.5 and is not modelled here).
+    nav_initial: Random,
+    // The full measured nav transition table (spec §5, 9 rows).
+    // A null `from` is the Any-state wildcard row (Any::AnyState).
+    nav_transitions: [
+        (from: Some(Random), input: ToLocation, to: LocationEntering),
+        (from: Some(LocationEntering), input: ToLocationTraverse, to: LocationTraversing),
+        (from: Some(LocationTraversing), input: ToLocationExit, to: LocationExiting),
+        (from: Some(LocationExiting), input: ToRandom, to: Random),
+        (from: Some(LocationTraversing), input: LookShop, to: ShopLooking),
+        (from: Some(ShopLooking), input: ToLocationTraverse, to: LocationTraversing),
+        (from: Some(LocationTraversing), input: QueueUp, to: InQueue),
+        (from: Some(InQueue), input: ToLocationExit, to: LocationExiting),
+        (from: None, input: ToRandom, to: Random),
+    ],
+    // EmbarassmentLevel vocabulary (spec §6, MEASURED from
+    // ClothesManager; the fold from clothing pieces to a level is
+    // not pinned by the spec and is NOT modelled here — the level
+    // enters the core through the session's embarrassment port).
+    embarrassment_levels: [None, OnlyPanties, WrongState, Shoes, MajorClothing],
+    // The consequence-audit mapping (spec §3, MEASURED from
+    // GirlAiManager.OnUnpausedCoroutine): at resume, a girl at
+    // MajorClothing receives the NoClothes input, a girl at
+    // WrongState receives the _wrongGirlState input, and every
+    // other level receives no input (null).
+    audit_inputs: [
+        (None, None),
+        (OnlyPanties, None),
+        (WrongState, Some(_wrongGirlState)),
+        (Shoes, None),
+        (MajorClothing, Some(NoClothes)),
+    ],
+    // The roster as data (spec §1: GirlStateMachine x13,
+    // WalkingGirl x12 — DERIVED in the spec as 12 walking
+    // shoppers + 1 stationary cashier, matching the GirlType
+    // vocabulary's Cashier entry). D-1105: reduced roster first,
+    // the cashier included. Per-girl GirlType assignment is
+    // serialized in the original (spec §10.7, UNKNOWN), so
+    // entries carry only an estate-original placeholder id and
+    // the measured role split — no type claims.
+    roster: [
+        (id: "walker-01", role: Walker),
+        (id: "walker-02", role: Walker),
+        (id: "walker-03", role: Walker),
+        (id: "walker-04", role: Walker),
+        (id: "walker-05", role: Walker),
+        (id: "walker-06", role: Walker),
+        (id: "walker-07", role: Walker),
+        (id: "walker-08", role: Walker),
+        (id: "walker-09", role: Walker),
+        (id: "walker-10", role: Walker),
+        (id: "walker-11", role: Walker),
+        (id: "walker-12", role: Walker),
+        (id: "cashier", role: Cashier),
+    ],
+)

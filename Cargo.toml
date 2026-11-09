@@ -1,0 +1,28 @@
+[package]
+name = "torogao-timestop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Clean-room Time Stop systems for the Torogao remake programme: two layered per-girl state machines as data tables, the event-subscription time-stop gate, the resume consequence audit, and the seven-field save record measured from TimeStop1 (games/time-stop-dynamics.md). No studied-game assets, text, or code."
+
+[dependencies]
+ron = "0.8"
+serde = { workspace = true }
+
+[[bin]]
+name = "timestop-smoke"
+path = "src/main.rs"
+
+[workspace]
+members = ["."]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+license = "BSD-2-Clause"
+rust-version = "1.85"
+version = "0.4.0"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
